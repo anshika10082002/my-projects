@@ -117,10 +117,10 @@ const redirectToLongUrl = async function (req, res) {
                 return res.status(404).send({ status: false, msg: "No URL Found" })
             }
             else {
+                //setting or storing data  in cache
+                await SET_ASYNC(`${urlCode}`, JSON.stringify(findUrl))
                 // when valid we perform a redirect
                 res.status(302).redirect(findUrl.longUrl)
-                //setting or storing data  in cache
-                await SET_ASYNC(`${urlCode}`, JSON.stringify(findUrl)).select({ _id: 0 })
             }
         }
     }
