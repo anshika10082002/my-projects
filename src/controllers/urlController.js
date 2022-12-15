@@ -74,8 +74,8 @@ const generateUrl = async function (req, res) {
         let myUrl = longUrl.trim().split(' ').join('')
         let url = await urlModel.findOne({ longUrl: myUrl }).select({ longUrl: 1, shortUrl: 1, urlCode: 1, _id: 0 })
         if (url) {
-            await SET_ASYNC(`${longUrl}`, JSON.stringify(url),"EX",86400)
-            return res.status(200).send({ satus: true, data: url })
+            await SET_ASYNC(`${longUrl}`,JSON.stringify(url),"EX",30)
+            return res.status(200).send({ satus: true, data: url})
            
         }
         else {
@@ -91,7 +91,7 @@ const generateUrl = async function (req, res) {
             }
             
             const myShortUrl = await urlModel.create(url)
-            res.status(201).send({ status: true, data: myShortUrl })
+            res.status(201).send({ status: true, data: {longUrl:myShortUrl.longUrl,shortUrl:myShortUrl.shortUrl,urlCode:myShortUrl.urlCode} })
         }
     }
     catch (err) {
@@ -121,7 +121,7 @@ const redirectToLongUrl = async function (req, res) {
                 return res.status(404).send({ status: false, msg: "No URL Found" })
             }
             else {
-                await SET_ASYNC(`${urlCode}`, JSON.stringify(findUrl),"EX",86400)
+                await SET_ASYNC(`${urlCode}`, JSON.stringify(findUrl),"EX",30)
                 res.status(302).redirect(findUrl.longUrl)
             }
         }
