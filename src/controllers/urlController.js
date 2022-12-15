@@ -6,7 +6,6 @@ const shortid = require("shortid");
 const redis = require("redis")
 const{ promisify }=require("util")
 
-// const baseUrl = 'http://localhost:3000'
 
 
 //1. Connect to the redis server
@@ -28,15 +27,14 @@ const redisClient = redis.createClient(
   //2. Prepare the functions for each command
   
   const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);
-  const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
 
+  const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
 
 
 //------------------------first api to generate url code-------------------------------------------------
 const generateUrl = async function (req, res) {
     try {
   
-    //destructuring
     const { longUrl } = req.body
 
     if (!isValidRequestBody(req.body)) {
@@ -58,7 +56,7 @@ const generateUrl = async function (req, res) {
     let cahcedUrlData = await GET_ASYNC(`${longUrl}`)
         if (cahcedUrlData) {
         const urlDetails = JSON.parse(cahcedUrlData)
-            return res.status(200).send({ satus: true, data: urlDetails,msg:"Url is coming from cache" })
+            return res.status(200).send({ satus: true, data: urlDetails })
         }
 
     // let option = {
@@ -77,12 +75,11 @@ const generateUrl = async function (req, res) {
         let url = await urlModel.findOne({ longUrl: myUrl }).select({ longUrl: 1, shortUrl: 1, urlCode: 1, _id: 0 })
         if (url) {
             await SET_ASYNC(`${longUrl}`, JSON.stringify(url),"EX",86400)
-            return res.status(200).send({ satus: true, data: url, msg:"Url is coming from DB" })
-           // res.status(200).send({ status: true, data: url })
+            return res.status(200).send({ satus: true, data: url })
+           
         }
         else {
             const urlCode = shortid.generate()
-            // const shortUrl = baseUrl + '/' + urlCode
             let shortUrl = `${req.protocol}://${req.headers.host}/` + urlCode
             let shortUrlInLowerCase = shortUrl.toLowerCase()
             
@@ -108,23 +105,22 @@ const generateUrl = async function (req, res) {
 const redirectToLongUrl = async function (req, res) {
     try {
         const urlCode = req.params.urlCode
-      //finding longUrl in cache through urlCode
+
+        //finding longUrl in cache through urlCode
+
         let cachedUrlData = await GET_ASYNC(`${urlCode}`)
 
         if (cachedUrlData) {
             const parseLongUrl = JSON.parse(cachedUrlData)
            res.status(302).redirect(parseLongUrl.longUrl)
         }
+
         else {
             const findUrl = await urlModel.findOne({ urlCode: urlCode })
             if (!findUrl) {
-                // return a not found 404 status
                 return res.status(404).send({ status: false, msg: "No URL Found" })
             }
             else {
-                // when valid we perform a redirect
-           
-                //setting or storing data  in cache
                 await SET_ASYNC(`${urlCode}`, JSON.stringify(findUrl),"EX",86400)
                 res.status(302).redirect(findUrl.longUrl)
             }
