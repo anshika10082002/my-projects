@@ -1,12 +1,11 @@
 const urlModel = require('../models/urlModel');
 const isUrlValid = require("url-validation");
 const{isValidRequestBody,isValid}=require('../validations/validation')
-const axios = require('axios')
 const shortid = require("shortid");
 const redis = require("redis")
 const{ promisify }=require("util")
-
-
+//const axios = require('axios')
+//===========================================================================================================//
 
 //1. Connect to the redis server
 const redisClient = redis.createClient(
@@ -22,20 +21,17 @@ const redisClient = redis.createClient(
     console.log("Connected to Redis..");
   });
   
-  
-  
   //2. Prepare the functions for each command
   
   const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);
 
   const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
 
-
 //------------------------first api to generate url code-------------------------------------------------
+
 const generateUrl = async function (req, res) {
     try {
-  
-    const { longUrl } = req.body
+       const { longUrl } = req.body
 
     if (!isValidRequestBody(req.body)) {
         return res.status(400).send({ status: false, message: 'Invalid request parameters. Please provide long url' })
@@ -45,21 +41,22 @@ const generateUrl = async function (req, res) {
         res.status(400).send({ status: false, message: `longUrl is required` })
         return
     }
-
-
     //check long url is valid or not-http is present or not
     if (!isUrlValid(longUrl)) {
-        return res.status(400).send({ status: false, message: "longUrl is not valid, Please provide valid url" })
+        return res.status(400).send({ status: false, message: "longUrl is not valid, Please provide valid url" }) }
 
-    }
-
-    let cahcedUrlData = await GET_ASYNC(`${longUrl}`)
-        if (cahcedUrlData) {
-        const urlDetails = JSON.parse(cahcedUrlData)
+    let cachedUrlData = await GET_ASYNC(`${longUrl}`)
+        if (cachedUrlData) {
+        const urlDetails = JSON.parse(cachedUrlData)
             return res.status(200).send({ satus: true, data: urlDetails })
+        } 
+        let url = await urlModel.findOne({ longUrl: longUrl }).select({ longUrl: 1, shortUrl: 1, urlCode: 1, _id: 0 })
+        if (url) {
+            await SET_ASYNC(`${longUrl}`,JSON.stringify(url),"EX",30)
+            return res.status(200).send({ satus: true, data: url})      
         }
-
-    // let option = {
+        
+   // let option = {
     //     method: 'get',
     //     url: longUrl
     // }
@@ -70,22 +67,12 @@ const generateUrl = async function (req, res) {
     // if (!urlValidate) { 
     //     return res.status(400).send({ status: false, message: `This Link ${longUrl} is not Valid URL.` }) 
     // }
-   
-        let myUrl = longUrl.trim().split(' ').join('')
-        let url = await urlModel.findOne({ longUrl: myUrl }).select({ longUrl: 1, shortUrl: 1, urlCode: 1, _id: 0 })
-        if (url) {
-            await SET_ASYNC(`${longUrl}`,JSON.stringify(url),"EX",30)
-            return res.status(200).send({ satus: true, data: url})
-           
-        }
         else {
             const urlCode = shortid.generate()
             let shortUrl = `${req.protocol}://${req.headers.host}/` + urlCode
             let shortUrlInLowerCase = shortUrl.toLowerCase()
-            
-
             url = {
-                longUrl: longUrl.trim().split(' ').join(''),
+                longUrl: longUrl,
                 shortUrl: shortUrlInLowerCase,
                 urlCode: urlCode,
             }
@@ -99,22 +86,17 @@ const generateUrl = async function (req, res) {
 
     }
 }
-
 //--------------------------GetApi-----------------------
 
 const redirectToLongUrl = async function (req, res) {
     try {
         const urlCode = req.params.urlCode
-
-        //finding longUrl in cache through urlCode
-
-        let cachedUrlData = await GET_ASYNC(`${urlCode}`)
-
+      //finding longUrl in cache through urlCode
+    let cachedUrlData = await GET_ASYNC(`${urlCode}`)
         if (cachedUrlData) {
             const parseLongUrl = JSON.parse(cachedUrlData)
            res.status(302).redirect(parseLongUrl.longUrl)
         }
-
         else {
             const findUrl = await urlModel.findOne({ urlCode: urlCode })
             if (!findUrl) {
@@ -132,3 +114,7 @@ const redirectToLongUrl = async function (req, res) {
 }
 
 module.exports={generateUrl,redirectToLongUrl}
+
+
+
+    
