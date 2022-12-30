@@ -3,6 +3,8 @@ const mongoose= require("mongoose")
 const isValidObjectId = (objectId) => {
     return mongoose.Types.ObjectId.isValid(objectId)
 }
+
+
 const validword=function(name){
   const regexName=/^(.|\s)*[a-zA-Z]+(.|\s)*$/;
  
@@ -37,10 +39,14 @@ const validword=function(name){
           return false
         }
       }
+
+
   function isValidPrice(input){
         var RE = /^-{0,1}\d*\.{0,1}\d+$/;
         return (RE.test(input));
       }
+
+
       const isValidStatus = (size) => {
         let status = ["pending", "completed", "canceled"];
             if (status.includes(size)) {

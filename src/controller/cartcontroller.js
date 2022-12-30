@@ -164,14 +164,14 @@ let totalItemsInCart=cart.totalItems
 if(removeProduct==1  && editproduct.quantity>1){
     editproduct.quantity=editproduct.quantity-1
    totalCartPrice=totalCartPrice-productPrice
-   totalItemsInCart=totalItemsInCart-1
+ 
 }
 //===========================deleting the whole item
 
 else{
     totalCartPrice=totalCartPrice-(productPrice*editproduct.quantity)
     totalItemsInCart=totalItemsInCart-editproduct.quantity
-    editproduct.quantity=0
+    
 }
 
 //===========================updating the cart
@@ -183,7 +183,7 @@ else{cartProduct.splice(index,1)}
 let Newdata={
     items:cartProduct,
     totalPrice:totalCartPrice,
-    totalItems:cartProduct.length
+    
 }
 
 let updatedCart= await CartModel.findByIdAndUpdate(cartId,Newdata,{new:true})

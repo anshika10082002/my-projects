@@ -41,7 +41,7 @@ const createProduct= async function(req,res){
 
         if(data.isFreeShipping){
           if(["false","true"].indexOf(data.isFreeShipping)<0 ){
-            return res.status(400).send({status:false,message:"Enter isFreeShipping in boolian form"})
+            return res.status(400).send({status:false,message:"Enter isFreeShipping in boolean form"})
           }
         }
         
@@ -49,13 +49,14 @@ const createProduct= async function(req,res){
          if(!uploadImage){return res.status(400).send({status:false,message:"productImage should be present"})}
          data.productImage=uploadImage
 
-        if(availableSizes){
+       if(availableSizes){
         let size= availableSizes.toUpperCase().split(" ")
-         for(let i=0;i<size.length;i++){   
-         if(!isValidSize(size[i])){return res.status(400).send({status:false,message:"Available sizes can be only these-S, XS, M ,X, L, XXL, XL"})}
-         }
-            data.availableSizes=size
+        for(let i=0;i<size.length;i++){
+          if(!isValidSize(size[i])){return res.status(400).send({status:false,message:"size shouid be "})}
         }
+       }
+            data.availableSizes=size
+        
 
         if(data.installments){
           if(isNaN(data.installments.trim()))return res.status(400).send({status:false,message:"Please put installments in Number"})}
@@ -98,7 +99,7 @@ const getFilteredProduct = async function (req, res){
   
       if(data.name) {conditions.title = {$regex:data.name,$options:'i'}}
   
-      
+
       if(data.priceGreaterThan || data.priceLessThan) {
         
         if(data.priceGreaterThan && data.priceLessThan){
@@ -118,9 +119,8 @@ const getFilteredProduct = async function (req, res){
       res.status(200).send({ status: true,message: "Success", data: getFilterProduct})
     } 
     catch (err) {
-      // let a=err.message.split(" ")
-      // if(a.includes("sort"))return res.send({status:false,msg:"Please enter a valid sort order between 1 or -1"})
-      res.status(500).send({ status: false, error: err.message });
+  
+      return res.status(500).send({ status: false, error: err.message });
     }
   }
 
@@ -186,7 +186,7 @@ const getProduct= async function(req,res){
        
         if(isFreeShipping){
           if(["false","true"].indexOf(isFreeShipping)<0 ){
-            return res.status(400).send({status:false,message:"Enter isFreeShipping in boolian form"})
+            return res.status(400).send({status:false,message:"Enter isFreeShipping in boolean form"})
           }
         }
 

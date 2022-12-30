@@ -77,6 +77,7 @@ const CreatUser= async function(req,res){
       data.profileImage=PicUrl
 
       data.password = await bcrypt.hash(data.password, 10)
+      
       data.address=address
       let NewUswer= await UserModel.create(data)
    

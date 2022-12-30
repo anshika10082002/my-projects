@@ -18,6 +18,8 @@ const userModel = require("../models/usermodel")
         return res.status(500).send({ status: false, error: err.message });
     }
 }
+
+
 let authorization=async function(req,res,next){
     try{
 let token=req.decodedToken
